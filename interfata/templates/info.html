@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WORDLE</title>
+
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="game">
+        <header>
+          <h1 class="title">WORDLE - ASC</h1>
+        </header>
+        <h5>Frecventa literelor in baza de date</h5>
+        <canvas id="myChart" width="400" height="400"></canvas>
+      </div>
+    </div>
+  </body>
+  <script>
+const ctx = document.getElementById('myChart').getContext('2d');
+
+let frecventa = {{ frecv|safe }}
+let labels = Object.keys(frecventa), data = Object.values(frecventa);
+const frecvChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'frecventa',
+            data: data,
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+</html>

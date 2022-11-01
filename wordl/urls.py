@@ -20,4 +20,5 @@ from interfata import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
+    path('get_feedback', views.feedback, name='feedback'),
 ]

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WORDLE</title>
+
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="joc">
+        <header>
+          <h1 class="titlu">WORDLE - ASC</h1>
+        </header>
+        <br><br>
+        <div id="spatiu-joc"></div>
+        <div id="istoric-joc"></div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    var urmLitera = 0;
+    var cuvCurent = ""
+
+    function init() {
+      let spatiu = document.getElementById("spatiu-joc");
+
+      let rand = document.createElement("div")
+      rand.className = "rand-litere"
+      
+      for (let j = 0; j < 5; j++) {
+          let casuta = document.createElement("div")
+          casuta.className = "casuta"
+          rand.appendChild(casuta)
+      }
+
+      spatiu.appendChild(rand)
+
+      window.addEventListener("keyup", (e) => {
+        let tasta = String(e.key)
+        if (tasta === "Backspace" && cuvCurent.length > 0) {
+            cuvCurent = cuvCurent.substr(0, cuvCurent.length - 1)
+            renderCuvant()
+            return
+        }
+
+        if (tasta === "Enter" && cuvCurent.length == 5) {
+          let xhr = new XMLHttpRequest();
+          xhr.open("POST", "/get_feedback");
+          xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
+
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              let feedback = JSON.parse(xhr.responseText)
+              addIstoric(cuvCurent, feedback["corecte"], feedback["partiale"])
+              cuvCurent = ""
+              renderCuvant()
+            }};
+
+          let data = {
+            "cuv": cuvCurent,
+          };
+
+          xhr.send(JSON.stringify(data));
+          return
+        }
+
+        if (cuvCurent.length >= 5) {
+            return
+        }
+
+        let gasit = tasta.match(/[a-z]/gi)
+        if (!gasit || gasit.length > 1) {
+            return
+        } else {
+            cuvCurent += tasta.toUpperCase()
+            renderCuvant()
+        }
+        })
+    }
+
+    function addIstoric(corecte, partiale){
+      let spatiu = document.getElementById("istoric-joc")
+
+      let rand = document.createElement("div")
+      rand.className = "rand-litere"
+      
+      for (let i = 0; i < 5; i++) {
+          let casuta = document.createElement("div")
+          if(corecte.includes(i)){
+            casuta.className = "casuta casuta-corect"
+          }else if(partiale.includes(i)){
+            casuta.className = "casuta casuta-partial"
+          }else{
+            casuta.className = "casuta casuta-gresit"
+          }
+          
+          casuta.textContent = cuvCurent.charAt(i)
+          rand.appendChild(casuta)
+      }
+
+      spatiu.appendChild(rand)
+    }
+
+    function renderCuvant(){
+      let rand = document.getElementsByClassName("rand-litere")[0]
+    
+      for (let i = 0; i < 5; i++) {
+        let casuta = rand.children[i]
+        if(i >= cuvCurent.length){
+          casuta.textContent = ""
+        }else{
+          casuta.textContent = cuvCurent.charAt(i)
+        }
+      }
+    }
+
+    init()
+  </script>
+</html>

@@ -1,0 +1,85 @@
+* {
+    margin: 0;
+    padding: 0;
+  }
+  
+  html,
+  body {
+    height: 100%;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+      "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+  }
+  
+  #container {
+    display: flex;
+    background-color: black;
+    height: 100%;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  #joc {
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    border-bottom: 1px solid rgb(58, 58, 60);
+  }
+  
+  .titlu {
+    color: gainsboro;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0.4rem 0 0.4rem 0;
+    text-align: center;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+      "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+  }
+
+  h1,h2,h3,h4,h5,h6{
+    color: gainsboro;
+    margin: 0.4rem 0 0.4rem 0;
+    text-align: center;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+      "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+  }
+
+  /* joc */
+  #spatiu-joc, #istoric-joc {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .casuta {
+    border: 2px solid rgb(255, 255, 255);
+    border-radius: 3px;
+    margin: 2px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    height: 3rem;
+    width: 3rem;
+    display: flex;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+  }
+  
+  .casuta-corect {
+    background-color: rgb(19, 151, 36);
+  }
+  .casuta-partial {
+    background-color: rgb(184, 154, 19);
+  }
+  .casuta-gresit {
+    background-color: rgb(70, 70, 70);
+  }
+  
+  .rand-litere {
+    display: flex;
+  }
