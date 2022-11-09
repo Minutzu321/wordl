@@ -3,7 +3,7 @@ import json
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.template import loader
 
-from interfata.joc import getFrecventa, getCuvinte, getIndex, getCuvantCurent
+from interfata.joc import getFrecventa, getCuvinte, getIndex, getCuvantCurent, nextCuvant, resetJoc
 
 
 def index(request):
@@ -16,10 +16,19 @@ def index(request):
     }
     return HttpResponse(template.render(context, request))
 
+def reset(request):
+    resetJoc()
+    return HttpResponse()
+
 def feedback(request):
     if not request.body:
         return HttpResponseBadRequest()
     input = json.loads(request.body)["cuv"]
+    if not input in getCuvinte():
+        return JsonResponse({
+            "corecte": [],
+            "partiale": [],
+        }, safe = False)
     cuvant = getCuvantCurent()
     print(input, cuvant)
     corecte = []
@@ -32,10 +41,15 @@ def feedback(request):
             cuvant = ''.join(nou)
     for i in range(0, 5):
         if input[i] in cuvant:
+            cuvant = cuvant.replace(input[i], "_", 1)
             partiale.append(i)
+
+    if len(corecte) == 5:
+        nextCuvant()
     
     return JsonResponse({
         "corecte": corecte,
         "partiale": partiale,
+        "i": getIndex()
 
     }, safe = False)

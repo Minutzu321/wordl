@@ -18,13 +18,24 @@
           <h1 class="titlu">WORDLE - ASC</h1>
         </header>
         <br><br>
+        <button id="start" class="buton_verde" onclick="incepe()">Start bot</button>
+        <hr>
+        <button id="rest" class="buton_verde" onclick="reset()" disabled>Reset</button>
+        <br><br>
+        <h3 id="status">{{i|add:1}} / {{ cuv|length }}</h3>
         <div id="spatiu-joc"></div>
         <div id="istoric-joc"></div>
+
       </div>
     </div>
   </body>
 
   <script>
+    var inceput = false
+
+    var listaCuvinte = {{ cuv|safe }}
+    var indexCuvant = {{ i }}
+
     var urmLitera = 0;
     var cuvCurent = ""
 
@@ -51,6 +62,9 @@
         }
 
         if (tasta === "Enter" && cuvCurent.length == 5) {
+          if(!listaCuvinte.includes(cuvCurent.toUpperCase())){
+            return
+          }
           let xhr = new XMLHttpRequest();
           xhr.open("POST", "/get_feedback");
           xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
@@ -58,7 +72,14 @@
           xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
               let feedback = JSON.parse(xhr.responseText)
-              addIstoric(cuvCurent, feedback["corecte"], feedback["partiale"])
+              if(feedback["corecte"].length == 5){
+                clearIstoric();
+                cuvCurent = ""
+                indexCuvant = feedback["i"]
+                renderCuvant()
+                return
+              }
+              addIstoric(feedback["corecte"], feedback["partiale"])
               cuvCurent = ""
               renderCuvant()
             }};
@@ -83,6 +104,10 @@
             renderCuvant()
         }
         })
+    }
+
+    function clearIstoric(){
+      document.getElementById("istoric-joc").innerHTML = ""
     }
 
     function addIstoric(corecte, partiale){
@@ -118,6 +143,32 @@
         }else{
           casuta.textContent = cuvCurent.charAt(i)
         }
+      }
+
+      document.getElementById("status").innerText = (indexCuvant+1)+" / "+listaCuvinte.length
+    }
+
+    function incepe(){
+      if(!inceput){
+        inceput = true
+        document.getElementById("start").setAttribute('disabled', '');
+        document.getElementById("rest").removeAttribute('disabled', '');
+      }
+    }
+
+    function reset(){
+      if(inceput){
+          let xhr = new XMLHttpRequest();
+          xhr.open("POST", "/reset");
+          xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
+
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              inceput = false
+              location.reload();
+            }};
+
+          xhr.send();
       }
     }
 

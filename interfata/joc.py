@@ -42,9 +42,22 @@ def getIndex():
     return index
 
 def getCuvantCurent():
-    getFrecventa()
+    asiguraInit()
     global index
     global cuvinteRandomizate
     return cuvinteRandomizate[index]
+
+def nextCuvant():
+    asiguraInit()
+    global index
+    index += 1
+    if index >= len(getCuvinte()):
+        resetJoc()
+
+def resetJoc():
+    global index
+    global cuvinteRandomizate
+    random.shuffle(cuvinteRandomizate)
+    index = 0
 
     
