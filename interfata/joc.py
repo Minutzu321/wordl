@@ -16,7 +16,7 @@ def asiguraInit():
         with open("date/cuvinte.txt", "r") as f:
             cuvinte = [line.rstrip() for line in f]
             global cuvinteRandomizate
-            cuvinteRandomizate = cuvinte
+            cuvinteRandomizate = cuvinte.copy()
             random.shuffle(cuvinteRandomizate)
         cuvstr = "".join(cuvinte)
         for i in range(65, 91):

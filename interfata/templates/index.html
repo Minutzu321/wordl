@@ -23,6 +23,7 @@
         <button id="rest" class="buton_verde" onclick="reset()" disabled>Reset</button>
         <br><br>
         <h3 id="status">{{i|add:1}} / {{ cuv|length }}</h3>
+        <h4 id="incercari">Incercari: 0</h4>
         <div id="spatiu-joc"></div>
         <div id="istoric-joc"></div>
 
@@ -35,9 +36,12 @@
 
     var listaCuvinte = {{ cuv|safe }}
     var indexCuvant = {{ i }}
+    var incercari = []
 
-    var urmLitera = 0;
+    var urmLitera = 0
     var cuvCurent = ""
+
+    var listaRestransa = listaCuvinte
 
     function init() {
       let spatiu = document.getElementById("spatiu-joc");
@@ -108,13 +112,27 @@
 
     function clearIstoric(){
       document.getElementById("istoric-joc").innerHTML = ""
+      listaRestransa = listaCuvinte
+      incercari = []
     }
+
+    function replaceAtIndex(_string,_index,_newValue) {
+      if(_index > _string.length-1) 
+      {
+        return string
+      }
+      else{
+        return _string.substring(0,_index) + _newValue + _string.substring(_index+1)
+      }
+    } 
 
     function addIstoric(corecte, partiale){
       let spatiu = document.getElementById("istoric-joc")
 
       let rand = document.createElement("div")
       rand.className = "rand-litere"
+
+      incercari.push(cuvCurent)
       
       for (let i = 0; i < 5; i++) {
           let casuta = document.createElement("div")
@@ -125,11 +143,46 @@
           }else{
             casuta.className = "casuta casuta-gresit"
           }
-          
           casuta.textContent = cuvCurent.charAt(i)
           rand.appendChild(casuta)
       }
 
+      listaRestransa = listaRestransa.
+        filter((element) => {
+          let ok = true
+          let element_nou = element
+          for(let corect of corecte){
+            if(cuvCurent.charAt(corect) !== element_nou.charAt(corect)){
+              ok = false
+              break
+            }else{
+              element_nou = replaceAtIndex(element_nou, corect, "_" )
+            }
+          }
+          for(let partial of partiale){
+            let gasitI = element_nou.indexOf(cuvCurent.charAt(partial))
+            if(gasitI === -1){
+              ok = false
+              break
+            }else{
+              element_nou = replaceAtIndex(element_nou, gasitI, "_" )
+            }
+          }
+          for(let i = 0; i < 5; i++){
+            if(!partiale.includes(i) && !corecte.includes(i)){
+              if(element_nou.indexOf(cuvCurent.charAt(i))!==-1){
+                ok = false
+                break
+              }
+            }
+          }
+          if(incercari.includes(element)){
+            return false
+          }
+          return ok
+        })
+
+      console.log(listaRestransa);
       spatiu.appendChild(rand)
     }
 
@@ -146,6 +199,7 @@
       }
 
       document.getElementById("status").innerText = (indexCuvant+1)+" / "+listaCuvinte.length
+      document.getElementById("incercari").innerText = "Incercari: "+ incercari.length
     }
 
     function incepe(){
