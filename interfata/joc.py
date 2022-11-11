@@ -1,4 +1,5 @@
 import random
+import json
 
 inceput = False
 
@@ -8,11 +9,15 @@ index = 0
 cuvinteRandomizate = []
 cuvinte = []
 frecventa = {}
+biti = {}
 
 def asiguraInit():
     global cuvinte
     global frecventa
+    global biti
     if len(cuvinte) < 1:
+        with open("date/biti.txt", "r") as f:
+            biti = json.loads(f.read())
         with open("date/cuvinte.txt", "r") as f:
             cuvinte = [line.rstrip() for line in f]
             global cuvinteRandomizate
@@ -40,6 +45,10 @@ def getCuvinte():
 def getIndex():
     global index
     return index
+
+def getBiti():
+    global biti
+    return biti
 
 def getCuvantCurent():
     asiguraInit()

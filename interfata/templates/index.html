@@ -34,12 +34,40 @@
   <script>
     var inceput = false
 
+    var ui = true
+
+    var frecventaCuvinte = {{ frecv|safe }}
+
     var listaCuvinte = {{ cuv|safe }}
+    let cuvData = {{biti|safe}}
+    var pos = listaCuvinte.length
+
+    var maxBiti = Math.log2(listaCuvinte.length)
+
+
+    const cartesian =
+      (...a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())))
+
+    listaCuvinte = listaCuvinte.sort((a, b) => {
+        if (getInformatie(a) > getInformatie(b)) {
+          return -1;
+        }
+        if (getInformatie(a) < getInformatie(b)) {
+          return 1;
+        }
+        return 0;
+      });
+
+
+
     var indexCuvant = {{ i }}
     var incercari = []
 
     var urmLitera = 0
     var cuvCurent = ""
+
+    var sumaIncerc = 0
+    
 
     var listaRestransa = listaCuvinte
 
@@ -69,30 +97,7 @@
           if(!listaCuvinte.includes(cuvCurent.toUpperCase())){
             return
           }
-          let xhr = new XMLHttpRequest();
-          xhr.open("POST", "/get_feedback");
-          xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
-
-          xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-              let feedback = JSON.parse(xhr.responseText)
-              if(feedback["corecte"].length == 5){
-                clearIstoric();
-                cuvCurent = ""
-                indexCuvant = feedback["i"]
-                renderCuvant()
-                return
-              }
-              addIstoric(feedback["corecte"], feedback["partiale"])
-              cuvCurent = ""
-              renderCuvant()
-            }};
-
-          let data = {
-            "cuv": cuvCurent,
-          };
-
-          xhr.send(JSON.stringify(data));
+          introduCuvant()
           return
         }
 
@@ -110,10 +115,125 @@
         })
     }
 
+    function introduCuvant(cuvant = cuvantCurent){
+      cuvCurent = cuvant
+      let xhr = new XMLHttpRequest();
+      xhr.open("POST", "/get_feedback");
+      xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          let feedback = JSON.parse(xhr.responseText)
+          if(feedback["corecte"].length == 5){
+            clearIstoric();
+            cuvCurent = ""
+            indexCuvant = feedback["i"]
+            renderCuvant()
+            if(inceput){
+              introduCuvant(listaRestransa[0])
+            }
+            return
+          }
+          addIstoric(feedback["corecte"], feedback["partiale"])
+          cuvCurent = ""
+          renderCuvant()
+          if(inceput){
+            introduCuvant(listaRestransa[0])
+          }
+        }};
+
+      let data = {
+        "cuv": cuvCurent,
+      };
+
+      xhr.send(JSON.stringify(data));
+    }
+
     function clearIstoric(){
-      document.getElementById("istoric-joc").innerHTML = ""
+      if(ui){
+        document.getElementById("istoric-joc").innerHTML = ""
+      }
       listaRestransa = listaCuvinte
+      sumaIncerc += incercari.length
       incercari = []
+    }
+
+
+
+    function calcInfo(p){
+      return p * -Math.log2(p)
+    }
+
+    
+
+    function getInformatie(cuvant){
+      let fbiti = cuvData[cuvant];
+      if(!!fbiti){
+        return fbiti
+      }
+      let pos = [0, 1, 2]
+      let combinari = cartesian(pos, pos, pos, pos, pos)
+      let biti = 0;
+      for(combinare of combinari){
+        let corecte = [], partiale = []
+        let lista = listaCuvinte
+        for (let i = 0; i < 5; i++) {
+          if(combinare[i] === 1){
+            partiale.push(i)
+          }else if(combinare[i] === 2){
+            corecte.push(i)
+          }
+        }
+        corecte = corecte.sort()
+        partiale = partiale.sort()
+
+        lista = lista.
+        filter((element) => {
+          let element_nou = element
+          for(let corect of corecte){
+            if(cuvant.charAt(corect) !== element_nou.charAt(corect)){
+              return false
+            }else{
+              element_nou = replaceAtIndex(element_nou, corect, "_" )
+            }
+          }
+          for(let partial of partiale){
+            let gasitI = element_nou.indexOf(cuvant.charAt(partial))
+            if(gasitI === -1){
+              return false
+            }else{
+              if(element_nou.charAt(partial) === cuvant.charAt(partial)){
+                return false
+              }
+              element_nou = replaceAtIndex(element_nou, gasitI, "_" )
+            }
+          }
+          for(let i = 0; i < 5; i++){
+            if(!partiale.includes(i) && !corecte.includes(i)){
+              if(element_nou.indexOf(cuvant.charAt(i))!==-1){
+                return false
+              }
+            }
+          }
+          return true
+        })
+        
+        let info = calcInfo(lista.length/listaCuvinte.length)
+        if(!isNaN(info))
+          biti += info;
+      }
+      infoCuv.push(cuvant)
+      infoBit.push(biti)
+      console.log(cuvant, biti);
+      return biti
+    }
+
+    function getScor(cuvant){
+      let scor = 0
+      for (let i = 0; i < 5; i++) {
+        scor += frecventaCuvinte[cuvant.charAt(i)]
+      }
+      return scor
     }
 
     function replaceAtIndex(_string,_index,_newValue) {
@@ -127,34 +247,34 @@
     } 
 
     function addIstoric(corecte, partiale){
-      let spatiu = document.getElementById("istoric-joc")
+      if(ui){
+        let spatiu = document.getElementById("istoric-joc")
 
-      let rand = document.createElement("div")
-      rand.className = "rand-litere"
-
-      incercari.push(cuvCurent)
-      
-      for (let i = 0; i < 5; i++) {
-          let casuta = document.createElement("div")
-          if(corecte.includes(i)){
-            casuta.className = "casuta casuta-corect"
-          }else if(partiale.includes(i)){
-            casuta.className = "casuta casuta-partial"
-          }else{
-            casuta.className = "casuta casuta-gresit"
-          }
-          casuta.textContent = cuvCurent.charAt(i)
-          rand.appendChild(casuta)
+        let rand = document.createElement("div")
+        rand.className = "rand-litere"
+        
+        for (let i = 0; i < 5; i++) {
+            let casuta = document.createElement("div")
+            if(corecte.includes(i)){
+              casuta.className = "casuta casuta-corect"
+            }else if(partiale.includes(i)){
+              casuta.className = "casuta casuta-partial"
+            }else{
+              casuta.className = "casuta casuta-gresit"
+            }
+            casuta.textContent = cuvCurent.charAt(i)
+            rand.appendChild(casuta)
+        }
+        spatiu.appendChild(rand)
       }
 
+      incercari.push(cuvCurent)
       listaRestransa = listaRestransa.
         filter((element) => {
-          let ok = true
           let element_nou = element
           for(let corect of corecte){
             if(cuvCurent.charAt(corect) !== element_nou.charAt(corect)){
-              ok = false
-              break
+              return false
             }else{
               element_nou = replaceAtIndex(element_nou, corect, "_" )
             }
@@ -162,44 +282,44 @@
           for(let partial of partiale){
             let gasitI = element_nou.indexOf(cuvCurent.charAt(partial))
             if(gasitI === -1){
-              ok = false
-              break
+              return false
             }else{
+              if(element_nou.charAt(partial) === cuvCurent.charAt(partial)){
+                return false
+              }
               element_nou = replaceAtIndex(element_nou, gasitI, "_" )
             }
           }
           for(let i = 0; i < 5; i++){
             if(!partiale.includes(i) && !corecte.includes(i)){
               if(element_nou.indexOf(cuvCurent.charAt(i))!==-1){
-                ok = false
-                break
+                return false
               }
             }
           }
           if(incercari.includes(element)){
             return false
           }
-          return ok
+          return true
         })
-
-      console.log(listaRestransa);
-      spatiu.appendChild(rand)
     }
 
     function renderCuvant(){
-      let rand = document.getElementsByClassName("rand-litere")[0]
-    
-      for (let i = 0; i < 5; i++) {
-        let casuta = rand.children[i]
-        if(i >= cuvCurent.length){
-          casuta.textContent = ""
-        }else{
-          casuta.textContent = cuvCurent.charAt(i)
+      if(ui){
+        let rand = document.getElementsByClassName("rand-litere")[0]
+      
+        for (let i = 0; i < 5; i++) {
+          let casuta = rand.children[i]
+          if(i >= cuvCurent.length){
+            casuta.textContent = ""
+          }else{
+            casuta.textContent = cuvCurent.charAt(i)
+          }
         }
       }
 
       document.getElementById("status").innerText = (indexCuvant+1)+" / "+listaCuvinte.length
-      document.getElementById("incercari").innerText = "Incercari: "+ incercari.length
+      document.getElementById("incercari").innerText = "Incercari: "+ incercari.length+" - "+(sumaIncerc/(indexCuvant+1))
     }
 
     function incepe(){
@@ -207,6 +327,7 @@
         inceput = true
         document.getElementById("start").setAttribute('disabled', '');
         document.getElementById("rest").removeAttribute('disabled', '');
+        introduCuvant(listaRestransa[0])
       }
     }
 

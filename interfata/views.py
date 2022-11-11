@@ -3,7 +3,7 @@ import json
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.template import loader
 
-from interfata.joc import getFrecventa, getCuvinte, getIndex, getCuvantCurent, nextCuvant, resetJoc
+from interfata.joc import getFrecventa, getCuvinte, getIndex, getCuvantCurent, nextCuvant, resetJoc, getBiti
 
 
 def index(request):
@@ -13,6 +13,7 @@ def index(request):
         'frecv': getFrecventa(),
         'cuv': getCuvinte(),
         'i': getIndex(),
+        'biti': getBiti()
     }
     return HttpResponse(template.render(context, request))
 
