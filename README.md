@@ -10,7 +10,7 @@ Acesta are **interfata grafica** si poate fi jucat de o persoana sau controlul p
 ## :notebook_with_decorative_cover: Cuprins
 - [Alcatuire](https://github.com/Minutzu321/wordl#hammer_and_wrench-alcatuirea-proiectului)
 - [Comunicare](https://github.com/Minutzu321/wordl#speech_balloon-comunicarea)
-- [Executare](https://github.com/Minutzu321/wordl#pray-rularea-programului)
+- [Executare](https://github.com/Minutzu321/wordl#pray-executarea-programului)
 - [Rezultate](https://github.com/Minutzu321/wordl#memo-rezultate)
 - [Echipa](https://github.com/Minutzu321/wordl#busts_in_silhouette-echipa)
 
