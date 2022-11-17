@@ -39,7 +39,7 @@ iar adresa la care raspunde serverul este
 http://127.0.0.1:8000/
 ```
 ### :memo: Rezultate
-Medie incercari: **3.60**\
+Medie incercari: **4.52**\
 Fisier cuvinte: [Va urma]()
 
 ### :busts_in_silhouette: Echipa

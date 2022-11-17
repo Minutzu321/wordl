@@ -50,6 +50,9 @@
 
     var listaRestransa = listaCuvinte
 
+    var textDovada = ""
+    var parteTextDovada = ""
+
     const cartesian =
       (...a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())))
     var pos = [0, 1, 2]
@@ -92,10 +95,11 @@
     }
     
     var besti = 0
-    function calc_entropii(){
+    var rankuri = {}
+    function get_by_entropie(cuvinte, setRank = false){
       let best = ""
       besti = 0
-      for(cuv of listaRestransa){
+      for(cuv of cuvinte){
         if(incercari.includes(cuv)){
           continue
         }
@@ -107,14 +111,18 @@
           }else if(!ls_rasp[cuv][comb]){
             vals.push(0)
           }else{
-            let toate = ls_rasp[cuv][comb]
+            let toate;
+            toate = ls_rasp[cuv][comb]
+            
             let nr = toate.length
             sum += nr
             vals.push(nr)
-
           }
         }
         let entro = calcEntropie(vals, sum)
+        if(setRank){
+          rankuri[cuv] = entro
+        }
         if(entro > besti){
           besti = entro
           best = cuv
@@ -122,6 +130,68 @@
         // console.log(cuv, entro)
       }
       return best
+    }
+
+    function calcFrecventa(solutions) {
+      let potPePoz = {};
+      let frecv = {};
+      let maxPotPePoz = {};
+      for (const cuv of solutions) {
+        for (let i = 0; i < 5; i++) {
+          const l = cuv.charAt(i);
+          if (!potPePoz[i]) potPePoz[i] = {};
+          if (!potPePoz[i][l]) potPePoz[i][w] = 1;
+          else potPePoz[i][l]++;
+          if (!maxPotPePoz[i] || potPePoz[i][l] > maxPotPePoz[i]) {
+            maxPotPePoz[i] = potPePoz[i][l];
+          }
+        }
+      }
+
+      for (const [poz, pot] of Object.entries(potPePoz)) {
+        for (const [c, n] of Object.entries(pot)) {
+          if (!frecv[poz]) frecv[poz] = {};
+          frecv[poz][c] = Math.round(n / maxPotPePoz[poz] * 100) / 100;
+        }
+      }
+
+      return frecv;
+    }
+
+    function ghici(strategie, pattern){
+      let ghici
+
+      if(strategie == 0){
+        ghici = get_by_entropie(listaRestransa)
+      }else{
+        const frecv = calcFrecventa(listaRestransa);
+        let max = 0;
+        let potriviri = [];
+        for (const cuv of listaRestransa) {
+          const disti = new Set();
+          let val = 0;
+          for (let i = 0; i < 5; i++) {
+            if (pattern && pattern.charAt(i) === '2') continue;
+            const l = cuv.charAt(i);
+            if (disti.has(l)) continue;
+            disti.add(l);
+            val = val + 1 * frecv[i][l];
+          }
+          if (val < max) continue;
+          else if (val > max) {
+            potriviri = [cuv];
+            max = val;
+          }
+          else if (val === max) {
+            potriviri.push(cuv);
+          }
+        }
+        ghici = potriviri[0];
+      }
+
+
+      return ghici
+
     }
 
 
@@ -179,12 +249,14 @@
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
           let feedback = JSON.parse(xhr.responseText)
+          addIstoric(feedback["pattern"])
           if(feedback["corecte"].length == 5){
-            if((indexCuvant+1) === listaCuvinte.length && feedback["i"] === 0
-            ){
+            if((indexCuvant+1) === listaCuvinte.length && feedback["i"] === 0){
               opreste()
+              download(textDovada)
               return
             }
+            textDovada += cuvCurent + " " + parteTextDovada.trim() + "\n"
             clearIstoric()
             cuvCurent = ""
             indexCuvant = feedback["i"]
@@ -194,11 +266,17 @@
             }
             return
           }
-          addIstoric(feedback["pattern"])
+          
           cuvCurent = ""
           renderCuvant()
           if(inceput){
-            introduCuvant(calc_entropii())
+            let ghicit
+            if(incercari.length < 2){
+              ghicit = ghici(0, feedback["pattern"])
+            }else{
+              ghicit = ghici(1, feedback["pattern"])
+            }
+            introduCuvant(ghicit)
           }
         }}
 
@@ -211,6 +289,7 @@
 
     function clearIstoric(){
       document.getElementById("istoric-joc").innerHTML = ""
+      parteTextDovada = ""
       listaRestransa = listaCuvinte
       sumaIncerc += incercari.length
       incercari = []
@@ -218,6 +297,8 @@
 
 
     function addIstoric(pattern){
+      parteTextDovada += cuvCurent + " "
+
       let spatiu = document.getElementById("istoric-joc")
 
       let rand = document.createElement("div")
@@ -279,6 +360,7 @@
 
     function reset(){
       if(inceput){
+          sumaIncerc = 0
           let xhr = new XMLHttpRequest()
           xhr.open("POST", "/reset")
           xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
@@ -293,8 +375,25 @@
       }
     }
 
-    document.getElementById("status").innerText = "Se incarca..."
+    download = function (text) {
+      let textFile = null;
+      var data = new Blob([text], {type: 'text/plain'});
 
+      if (textFile !== null) {
+        window.URL.revokeObjectURL(textFile);
+      }
+
+      textFile = window.URL.createObjectURL(data);
+      var a = document.createElement("a");
+      document.body.appendChild(a);
+      a.style = "display: none";
+      a.href = textFile;
+      a.download = "rezultate.txt";
+      a.click();
+      window.URL.revokeObjectURL(textFile);
+    };
+
+    document.getElementById("status").innerText = "Se incarca..."
 
     let copieCuvList = [...listaCuvinte]
 
@@ -326,6 +425,15 @@
 
               document.getElementById("status").innerText = "{{i|add:1}} / {{ cuv|length }}"
               document.getElementById("start").removeAttribute('disabled', '')
+              get_by_entropie(listaCuvinte, true)
+
+              let rankSortat = Object.fromEntries(
+                  Object.entries(rankuri).sort(([,a],[,b]) => a-b)
+              );
+
+              console.log(rankSortat);
+
+              rankuri = rankSortat
               init()
             }
           }
