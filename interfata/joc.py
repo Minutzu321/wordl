@@ -1,40 +1,55 @@
+import os
+import pickle
 import random
 import json
-
-inceput = False
+from collections import Counter, defaultdict
 
 index = 0
 
-
 cuvinteRandomizate = []
 cuvinte = []
-frecventa = {}
-biti = {}
+
 
 def asiguraInit():
     global cuvinte
-    global frecventa
-    global biti
+
     if len(cuvinte) < 1:
-        with open("date/biti.txt", "r") as f:
-            biti = json.loads(f.read())
         with open("date/cuvinte.txt", "r") as f:
             cuvinte = [line.rstrip() for line in f]
+                
             global cuvinteRandomizate
             cuvinteRandomizate = cuvinte.copy()
             random.shuffle(cuvinteRandomizate)
-        cuvstr = "".join(cuvinte)
-        for i in range(65, 91):
-            caracter = chr(i)
-            frecventa[caracter] = cuvstr.count(caracter)
 
-        frecventa = {k: v for k, v in sorted(frecventa.items(), key=lambda item: item[1], reverse=True)}
 
-def getFrecventa():
-    asiguraInit()
+def calc_rasp(input, cuvant):
+    gresite = [i for i, v in enumerate(input) if v != cuvant[i]]
+    gas = Counter(cuvant[i] for i in gresite)
+    rasp = [2] * 5
+    for i in gresite:
+        car = input[i]
+        if gas[car] > 0:
+            rasp[i] = 1
+            gas[car] -= 1
+        else:
+            rasp[i] = 0
+    return tuple(rasp)
 
-    global frecventa
-    return frecventa
+def gen_lista_rasp(ls):
+    ls_rasp = {}
+    for cuv in ls:
+        for cuv1 in ls:
+            rasp = "".join([str(c) for c in calc_rasp(cuv, cuv1)])
+            
+            if not cuv in ls_rasp.keys():
+                ls_rasp[cuv] = {}
+
+            if not rasp in ls_rasp[cuv].keys():
+                ls_rasp[cuv][rasp] = []
+            
+            ls_rasp[cuv][rasp].append(cuv1)
+        print(ls_rasp[cuv])
+    return json.dumps(ls_rasp)
 
 def getCuvinte():
     asiguraInit()
@@ -45,10 +60,6 @@ def getCuvinte():
 def getIndex():
     global index
     return index
-
-def getBiti():
-    global biti
-    return biti
 
 def getCuvantCurent():
     asiguraInit()

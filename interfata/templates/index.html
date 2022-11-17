@@ -18,9 +18,9 @@
           <h1 class="titlu">WORDLE - ASC</h1>
         </header>
         <br><br>
-        <button id="start" class="buton_verde" onclick="incepe()">Start bot</button>
+        <button id="start" class="buton_verde" onclick="incepe()" disabled>Porneste bot</button>
         <hr>
-        <button id="rest" class="buton_verde" onclick="reset()" disabled>Reset</button>
+        <button id="rest" class="buton_verde" onclick="opreste()" disabled>Opreste bot</button>
         <br><br>
         <h3 id="status">{{i|add:1}} / {{ cuv|length }}</h3>
         <h4 id="incercari">Incercari: 0</h4>
@@ -34,45 +34,100 @@
   <script>
     var inceput = false
 
-    var ui = true
-
-    var frecventaCuvinte = {{ frecv|safe }}
+    var cuvCurent = ""
 
     var listaCuvinte = {{ cuv|safe }}
-    let cuvData = {{biti|safe}}
-    var pos = listaCuvinte.length
 
-    var maxBiti = Math.log2(listaCuvinte.length)
-
-
-    const cartesian =
-      (...a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())))
-
-    listaCuvinte = listaCuvinte.sort((a, b) => {
-        if (getInformatie(a) > getInformatie(b)) {
-          return -1;
-        }
-        if (getInformatie(a) < getInformatie(b)) {
-          return 1;
-        }
-        return 0;
-      });
-
-
+    var ls_rasp = {}
 
     var indexCuvant = {{ i }}
+
     var incercari = []
 
     var urmLitera = 0
-    var cuvCurent = ""
 
     var sumaIncerc = 0
-    
 
     var listaRestransa = listaCuvinte
 
+    const cartesian =
+      (...a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())))
+    var pos = [0, 1, 2]
+    var combinari_pos = cartesian(pos, pos, pos, pos, pos)
+    for (let i = 0; i < combinari_pos.length; i++) {
+      combinari_pos[i] = combinari_pos[i].join("")
+    }
+    
+    
+
+    function calc_rasp(cuv, corect){
+      let raspuns = [0, 0, 0, 0, 0]
+      for (let i = 0; i < 5; i++) {
+        if(cuv[i] === corect[i]){
+          raspuns[i] = 2
+          corect = corect.replace(new RegExp(cuv[i], ''), '_')
+        }
+      }
+      for (let i = 0; i < 5; i++) {
+        if(raspuns[i] == 0 && corect.includes(cuv[i])){
+          raspuns[i] = 1
+          corect = corect.replace(new RegExp(cuv[i], ''), '_')
+        }
+      }
+      return raspuns
+    }
+
+    function calcEntropie(ls_p, sum){
+      let s = 0
+      for(x of ls_p){
+        if(sum !== 0){
+          let p = x / sum
+          if(p !== 0){
+            s -= p * Math.log2(p)
+          }
+        }
+        
+      }
+      return s
+    }
+    
+    var besti = 0
+    function calc_entropii(){
+      let best = ""
+      besti = 0
+      for(cuv of listaRestransa){
+        if(incercari.includes(cuv)){
+          continue
+        }
+        let vals = []
+        let sum = 0
+        for(comb of combinari_pos){
+          if(!ls_rasp[cuv]){
+            vals.push(0)
+          }else if(!ls_rasp[cuv][comb]){
+            vals.push(0)
+          }else{
+            let toate = ls_rasp[cuv][comb]
+            let nr = toate.length
+            sum += nr
+            vals.push(nr)
+
+          }
+        }
+        let entro = calcEntropie(vals, sum)
+        if(entro > besti){
+          besti = entro
+          best = cuv
+        }
+        // console.log(cuv, entro)
+      }
+      return best
+    }
+
+
+
     function init() {
-      let spatiu = document.getElementById("spatiu-joc");
+      let spatiu = document.getElementById("spatiu-joc")
 
       let rand = document.createElement("div")
       rand.className = "rand-litere"
@@ -115,206 +170,88 @@
         })
     }
 
-    function introduCuvant(cuvant = cuvantCurent){
+    function introduCuvant(cuvant = cuvCurent){
       cuvCurent = cuvant
-      let xhr = new XMLHttpRequest();
-      xhr.open("POST", "/get_feedback");
+      let xhr = new XMLHttpRequest()
+      xhr.open("POST", "/get_feedback")
       xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
 
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
           let feedback = JSON.parse(xhr.responseText)
           if(feedback["corecte"].length == 5){
-            clearIstoric();
+            if((indexCuvant+1) === listaCuvinte.length && feedback["i"] === 0
+            ){
+              opreste()
+              return
+            }
+            clearIstoric()
             cuvCurent = ""
             indexCuvant = feedback["i"]
             renderCuvant()
             if(inceput){
-              introduCuvant(listaRestransa[0])
+              introduCuvant("TAREI")
             }
             return
           }
-          addIstoric(feedback["corecte"], feedback["partiale"])
+          addIstoric(feedback["pattern"])
           cuvCurent = ""
           renderCuvant()
           if(inceput){
-            introduCuvant(listaRestransa[0])
+            introduCuvant(calc_entropii())
           }
-        }};
+        }}
 
       let data = {
         "cuv": cuvCurent,
-      };
+      }
 
-      xhr.send(JSON.stringify(data));
+      xhr.send(JSON.stringify(data))
     }
 
     function clearIstoric(){
-      if(ui){
-        document.getElementById("istoric-joc").innerHTML = ""
-      }
+      document.getElementById("istoric-joc").innerHTML = ""
       listaRestransa = listaCuvinte
       sumaIncerc += incercari.length
       incercari = []
     }
 
 
+    function addIstoric(pattern){
+      let spatiu = document.getElementById("istoric-joc")
 
-    function calcInfo(p){
-      return p * -Math.log2(p)
-    }
-
-    
-
-    function getInformatie(cuvant){
-      let fbiti = cuvData[cuvant];
-      if(!!fbiti){
-        return fbiti
-      }
-      let pos = [0, 1, 2]
-      let combinari = cartesian(pos, pos, pos, pos, pos)
-      let biti = 0;
-      for(combinare of combinari){
-        let corecte = [], partiale = []
-        let lista = listaCuvinte
-        for (let i = 0; i < 5; i++) {
-          if(combinare[i] === 1){
-            partiale.push(i)
-          }else if(combinare[i] === 2){
-            corecte.push(i)
-          }
-        }
-        corecte = corecte.sort()
-        partiale = partiale.sort()
-
-        lista = lista.
-        filter((element) => {
-          let element_nou = element
-          for(let corect of corecte){
-            if(cuvant.charAt(corect) !== element_nou.charAt(corect)){
-              return false
-            }else{
-              element_nou = replaceAtIndex(element_nou, corect, "_" )
-            }
-          }
-          for(let partial of partiale){
-            let gasitI = element_nou.indexOf(cuvant.charAt(partial))
-            if(gasitI === -1){
-              return false
-            }else{
-              if(element_nou.charAt(partial) === cuvant.charAt(partial)){
-                return false
-              }
-              element_nou = replaceAtIndex(element_nou, gasitI, "_" )
-            }
-          }
-          for(let i = 0; i < 5; i++){
-            if(!partiale.includes(i) && !corecte.includes(i)){
-              if(element_nou.indexOf(cuvant.charAt(i))!==-1){
-                return false
-              }
-            }
-          }
-          return true
-        })
-        
-        let info = calcInfo(lista.length/listaCuvinte.length)
-        if(!isNaN(info))
-          biti += info;
-      }
-      infoCuv.push(cuvant)
-      infoBit.push(biti)
-      console.log(cuvant, biti);
-      return biti
-    }
-
-    function getScor(cuvant){
-      let scor = 0
+      let rand = document.createElement("div")
+      rand.className = "rand-litere"
+      
       for (let i = 0; i < 5; i++) {
-        scor += frecventaCuvinte[cuvant.charAt(i)]
+          let casuta = document.createElement("div")
+          if(pattern.charAt(i) === '2'){
+            casuta.className = "casuta casuta-corect"
+          }else if(pattern.charAt(i) === '1'){
+            casuta.className = "casuta casuta-partial"
+          }else{
+            casuta.className = "casuta casuta-gresit"
+          }
+          casuta.textContent = cuvCurent.charAt(i)
+          rand.appendChild(casuta)
       }
-      return scor
-    }
-
-    function replaceAtIndex(_string,_index,_newValue) {
-      if(_index > _string.length-1) 
-      {
-        return string
-      }
-      else{
-        return _string.substring(0,_index) + _newValue + _string.substring(_index+1)
-      }
-    } 
-
-    function addIstoric(corecte, partiale){
-      if(ui){
-        let spatiu = document.getElementById("istoric-joc")
-
-        let rand = document.createElement("div")
-        rand.className = "rand-litere"
-        
-        for (let i = 0; i < 5; i++) {
-            let casuta = document.createElement("div")
-            if(corecte.includes(i)){
-              casuta.className = "casuta casuta-corect"
-            }else if(partiale.includes(i)){
-              casuta.className = "casuta casuta-partial"
-            }else{
-              casuta.className = "casuta casuta-gresit"
-            }
-            casuta.textContent = cuvCurent.charAt(i)
-            rand.appendChild(casuta)
-        }
-        spatiu.appendChild(rand)
-      }
+      spatiu.appendChild(rand)
+      
 
       incercari.push(cuvCurent)
-      listaRestransa = listaRestransa.
-        filter((element) => {
-          let element_nou = element
-          for(let corect of corecte){
-            if(cuvCurent.charAt(corect) !== element_nou.charAt(corect)){
-              return false
-            }else{
-              element_nou = replaceAtIndex(element_nou, corect, "_" )
-            }
-          }
-          for(let partial of partiale){
-            let gasitI = element_nou.indexOf(cuvCurent.charAt(partial))
-            if(gasitI === -1){
-              return false
-            }else{
-              if(element_nou.charAt(partial) === cuvCurent.charAt(partial)){
-                return false
-              }
-              element_nou = replaceAtIndex(element_nou, gasitI, "_" )
-            }
-          }
-          for(let i = 0; i < 5; i++){
-            if(!partiale.includes(i) && !corecte.includes(i)){
-              if(element_nou.indexOf(cuvCurent.charAt(i))!==-1){
-                return false
-              }
-            }
-          }
-          if(incercari.includes(element)){
-            return false
-          }
-          return true
-        })
+      let cuv_de_la_pattern = ls_rasp[cuvCurent][pattern]
+      listaRestransa = listaRestransa.filter(value => cuv_de_la_pattern.includes(value))
     }
 
     function renderCuvant(){
-      if(ui){
-        let rand = document.getElementsByClassName("rand-litere")[0]
+      let rand = document.getElementsByClassName("rand-litere")[0]
       
-        for (let i = 0; i < 5; i++) {
-          let casuta = rand.children[i]
-          if(i >= cuvCurent.length){
-            casuta.textContent = ""
-          }else{
-            casuta.textContent = cuvCurent.charAt(i)
-          }
+      for (let i = 0; i < 5; i++) {
+        let casuta = rand.children[i]
+        if(i >= cuvCurent.length){
+          casuta.textContent = ""
+        }else{
+          casuta.textContent = cuvCurent.charAt(i)
         }
       }
 
@@ -325,28 +262,76 @@
     function incepe(){
       if(!inceput){
         inceput = true
-        document.getElementById("start").setAttribute('disabled', '');
-        document.getElementById("rest").removeAttribute('disabled', '');
-        introduCuvant(listaRestransa[0])
+        document.getElementById("start").setAttribute('disabled', '')
+        document.getElementById("rest").removeAttribute('disabled', '')
+        introduCuvant("TAREI")
+      }
+    }
+
+    function opreste(){
+      if(inceput){
+        inceput = false
+
+        document.getElementById("rest").setAttribute('disabled', '')
+        document.getElementById("start").removeAttribute('disabled', '')
       }
     }
 
     function reset(){
       if(inceput){
-          let xhr = new XMLHttpRequest();
-          xhr.open("POST", "/reset");
+          let xhr = new XMLHttpRequest()
+          xhr.open("POST", "/reset")
           xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}')
 
           xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
               inceput = false
-              location.reload();
-            }};
+              location.reload()
+            }}
 
-          xhr.send();
+          xhr.send()
       }
     }
 
-    init()
+    document.getElementById("status").innerText = "Se incarca..."
+
+
+    let copieCuvList = [...listaCuvinte]
+
+    let ls_rasps = []
+    const parti = 4
+
+    let suma = 0
+
+    var timpInceput = new Date().getTime()
+
+    for (let i = parti; i > 0; i--) {
+        let bucata = copieCuvList.splice(0, Math.ceil(copieCuvList.length / i))
+        let cuvLoad = new Worker("/static/raspunsuri_loader.js")
+        cuvLoad.addEventListener("message", function handleLista(e) {
+          if(e.data[0] === 0){
+            suma += e.data[1]
+            document.getElementById("status").innerText = "Se incarca: "+Math.floor((suma/listaCuvinte.length)*100) + " %"
+          }else{
+            console.log("PARTITIA "+(parti-i+1)+" / "+parti+" E GATA")
+            ls_rasps.push(e.data[1])
+            if(ls_rasps.length === parti){
+              for(let parte of ls_rasps){
+                if(ls_rasps.length === parti){
+                  ls_rasp = {...ls_rasp, ...parte}
+                }
+              }
+              var sfarsit = new Date().getTime()
+              console.log("Durata: "+((sfarsit-timpInceput)/1000)+" secunde")
+
+              document.getElementById("status").innerText = "{{i|add:1}} / {{ cuv|length }}"
+              document.getElementById("start").removeAttribute('disabled', '')
+              init()
+            }
+          }
+          
+        })
+        cuvLoad.postMessage([bucata, listaCuvinte])
+    }
   </script>
 </html>
