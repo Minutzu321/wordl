@@ -29,7 +29,7 @@ Patternul dintre AAAAB(cuvant corect) si AAABC(cuvant ghicit) este "22210"
 1 - litera se afla in cuvant dar nu e pe pozitia buna
 0 - litera nu se afla in cuvant
 ```
-### :pray: Rularea programului
+### :pray: Executarea programului
 Pentru a porni serverul web, comanda este
 ```
 python manage.py runserver
