@@ -17,3 +17,18 @@ Patternul dintre AAAAB(cuvant corect) si AAABC(cuvant ghicit) este "22210"
 1 - litera se afla in cuvant dar nu e pe pozitia buna
 0 - litera nu se afla in cuvant
 ```
+#### :pray: Rularea programului
+Pentru a porni serverul web, comanda este
+```
+python manage.py runserver
+```
+iar adresa la care raspunde serverul este
+```
+http://127.0.0.1:8000/
+```
+#### :memo: Rezultate
+Medie incercari: **3.60**\
+Fisier cuvinte: [Va urma]()
+
+#### :busts_in_silhouette: Echipa
+- Chirus Mina-Sebastian - Grupa 142
