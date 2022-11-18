@@ -12,6 +12,7 @@ Acesta are **interfata grafica** si poate fi jucat de o persoana sau controlul p
 - [Comunicare](https://github.com/Minutzu321/wordl#speech_balloon-comunicarea)
 - [Executare](https://github.com/Minutzu321/wordl#pray-executarea-programului)
 - [Rezultate](https://github.com/Minutzu321/wordl#memo-rezultate)
+- [Surse](https://github.com/Minutzu321/wordl/#eyes-surse)
 - [Echipa](https://github.com/Minutzu321/wordl#busts_in_silhouette-echipa)
 
 
