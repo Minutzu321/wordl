@@ -42,5 +42,10 @@ http://127.0.0.1:8000/
 Medie incercari: **4.52**\
 Fisier cuvinte: [Va urma]()
 
+### :eyes: Surse
+ - [3Blue1Brown - Solving Wordle using information theory](https://www.youtube.com/watch?v=v68zYyaEmEA&ab_channel=3Blue1Brown)
+ - []()
+ - []()
+
 ### :busts_in_silhouette: Echipa
 - Chirus Mina-Sebastian - Grupa 142
