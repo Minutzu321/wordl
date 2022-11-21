@@ -41,12 +41,11 @@ http://127.0.0.1:8000/
 ```
 ### :memo: Rezultate
 Medie incercari: **4.52**\
-Fisier cuvinte: [Va urma]()
+Fisier cuvinte: [https://github.com/Minutzu321/wordl/blob/master/rezultate.txt](https://github.com/Minutzu321/wordl/blob/master/rezultate.txt)
 
 ### :eyes: Surse
  - [3Blue1Brown - Solving Wordle using information theory](https://www.youtube.com/watch?v=v68zYyaEmEA&ab_channel=3Blue1Brown)
- - []()
- - []()
+ - [https://github.com/GillesVandewiele/Wordle-Bot](https://github.com/GillesVandewiele/Wordle-Bot)
 
 ### :busts_in_silhouette: Echipa
-- Chirus Mina-Sebastian - Grupa 142
+- ?
