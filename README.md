@@ -12,6 +12,7 @@ Acesta are **interfata grafica** si poate fi jucat de o persoana sau controlul p
 - [Comunicare](https://github.com/Minutzu321/wordl#speech_balloon-comunicarea)
 - [Executare](https://github.com/Minutzu321/wordl#pray-executarea-programului)
 - [Rezultate](https://github.com/Minutzu321/wordl#memo-rezultate)
+- [Surse](https://github.com/Minutzu321/wordl/#eyes-surse)
 - [Echipa](https://github.com/Minutzu321/wordl#busts_in_silhouette-echipa)
 
 
@@ -41,6 +42,11 @@ http://127.0.0.1:8000/
 ### :memo: Rezultate
 Medie incercari: **4.52**\
 Fisier cuvinte: [Va urma]()
+
+### :eyes: Surse
+ - [3Blue1Brown - Solving Wordle using information theory](https://www.youtube.com/watch?v=v68zYyaEmEA&ab_channel=3Blue1Brown)
+ - []()
+ - []()
 
 ### :busts_in_silhouette: Echipa
 - Chirus Mina-Sebastian - Grupa 142
