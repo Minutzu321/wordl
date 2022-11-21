@@ -31,6 +31,10 @@ Patternul dintre AAAAB(cuvant corect) si AAABC(cuvant ghicit) este "22210"
 0 - litera nu se afla in cuvant
 ```
 ### :pray: Executarea programului
+Pentru a instala framework-ul, comanda este
+```
+pip install -r requirements.txt
+```
 Pentru a porni serverul web, comanda este
 ```
 python manage.py runserver
