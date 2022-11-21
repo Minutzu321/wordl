@@ -53,4 +53,7 @@ Fisier cuvinte: [https://github.com/Minutzu321/wordl/blob/master/rezultate.txt](
  - [https://github.com/atoppi/simple-wordle-solver](https://github.com/atoppi/simple-wordle-solver)
 
 ### :busts_in_silhouette: Echipa
-- ?
+- Chiruș Mina-Sebastian
+- Dobromirescu Mihaela
+- Iacob Victor-Gabriel
+- Pincu Iulia Maria Andreea
