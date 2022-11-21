@@ -75,6 +75,8 @@ def nextCuvant():
         resetJoc()
 
 def resetJoc():
+    asiguraInit()
+
     global index
     global cuvinteRandomizate
     random.shuffle(cuvinteRandomizate)

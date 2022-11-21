@@ -50,6 +50,7 @@ Fisier cuvinte: [https://github.com/Minutzu321/wordl/blob/master/rezultate.txt](
 ### :eyes: Surse
  - [3Blue1Brown - Solving Wordle using information theory](https://www.youtube.com/watch?v=v68zYyaEmEA&ab_channel=3Blue1Brown)
  - [https://github.com/GillesVandewiele/Wordle-Bot](https://github.com/GillesVandewiele/Wordle-Bot)
+ - [https://github.com/atoppi/simple-wordle-solver](https://github.com/atoppi/simple-wordle-solver)
 
 ### :busts_in_silhouette: Echipa
 - ?

@@ -38,12 +38,11 @@ self.onmessage = function genereaza_lista(e) {
         i += 1
       
         if(i % 100 === 0){
-            
-            postMessage([0,i-lasts])
+            postMessage([0, i-lasts])
             lasts = i
         }
     }
 
   
-    postMessage([1,ls_rasp])
+    postMessage([1, ls_rasp])
   };
