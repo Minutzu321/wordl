@@ -140,7 +140,7 @@
         for (let i = 0; i < 5; i++) {
           const l = cuv.charAt(i);
           if (!potPePoz[i]) potPePoz[i] = {};
-          if (!potPePoz[i][l]) potPePoz[i][w] = 1;
+          if (!potPePoz[i][l]) potPePoz[i][l] = 1;
           else potPePoz[i][l]++;
           if (!maxPotPePoz[i] || potPePoz[i][l] > maxPotPePoz[i]) {
             maxPotPePoz[i] = potPePoz[i][l];
