@@ -1,4 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WORDLE</title>
 
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="joc">
+        <header>
+          <h1 class="titlu">WORDLE - ASC</h1>
+        </header>
+        <br><br>
+        <button id="start" class="buton_verde" onclick="incepe()" disabled>Porneste bot</button>
+        <hr>
+        <button id="rest" class="buton_verde" onclick="opreste()" disabled>Opreste bot</button>
+        <br><br>
+        <h3 id="status">{{i|add:1}} / {{ cuv|length }}</h3>
+        <h4 id="incercari">Incercari: 0</h4>
+        <div id="spatiu-joc"></div>
+        <div id="istoric-joc"></div>
+
+      </div>
+    </div>
+  </body>
+
+  <script>
+    var inceput = false
+
+    var cuvCurent = ""
+
+    var listaCuvinte = {{ cuv|safe }}
+
+    var ls_rasp = {}
+
+    var indexCuvant = {{ i }}
+
+    var incercari = []
+
+    var urmLitera = 0
+
+    var sumaIncerc = 0
+
+    var listaRestransa = listaCuvinte
+
+    var textDovada = ""
+    var parteTextDovada = ""
+
+    const cartesian =
+      (...a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())))
+    var pos = [0, 1, 2]
+    var combinari_pos = cartesian(pos, pos, pos, pos, pos)
+    for (let i = 0; i < combinari_pos.length; i++) {
+      combinari_pos[i] = combinari_pos[i].join("")
+    }
+    
+    
+
+    function calc_rasp(cuv, corect){
+      let raspuns = [0, 0, 0, 0, 0]
+      for (let i = 0; i < 5; i++) {
+        if(cuv[i] === corect[i]){
+          raspuns[i] = 2
+          corect = corect.replace(new RegExp(cuv[i], ''), '_')
+        }
+      }
+      for (let i = 0; i < 5; i++) {
+        if(raspuns[i] == 0 && corect.includes(cuv[i])){
+          raspuns[i] = 1
+          corect = corect.replace(new RegExp(cuv[i], ''), '_')
+        }
+      }
+      return raspuns
+    }
+
+    function calcEntropie(ls_p, sum){
+      let s = 0
+      for(x of ls_p){
+        if(sum !== 0){
+          let p = x / sum
+          if(p !== 0){
+            s -= p * Math.log2(p)
+          }
+        }
+        
+      }
+      return s
+    }
+    
+    var besti = 0
+    function get_by_entropie(cuvinte){
+      let best = ""
+      besti = 0
+      for(cuv of cuvinte){
+        if(incercari.includes(cuv)){
+          continue
+        }
+        let vals = []
+        let sum = 0
+        for(comb of combinari_pos){
+          if(!ls_rasp[cuv]){
+            vals.push(0)
+          }else if(!ls_rasp[cuv][comb]){
+            vals.push(0)
+          }else{
+            let toate;
+            toate = ls_rasp[cuv][comb]
+            
+            let nr = toate.length
+            sum += nr
+            vals.push(nr)
+          }
+        }
+        let entro = calcEntropie(vals, sum)
+        if(entro > besti){
+          besti = entro
+          best = cuv
+        }
+        // console.log(cuv, entro)
+      }
+      return best
+    }
+
+    function calcFrecventa(solutions) {
+      let potPePoz = {};
+      let frecv = {};
+      let maxPotPePoz = {};
+      for (const cuv of solutions) {
+        for (let i = 0; i < 5; i++) {
+          const l = cuv.charAt(i);
+          if (!potPePoz[i]) potPePoz[i] = {};
+          if (!potPePoz[i][l]) potPePoz[i][l] = 1;
+          else potPePoz[i][l]++;
+          if (!maxPotPePoz[i] || potPePoz[i][l] > maxPotPePoz[i]) {
+            maxPotPePoz[i] = potPePoz[i][l];
+          }
+        }
+      }
+
+      for (const [poz, pot] of Object.entries(potPePoz)) {
+        for (const [c, n] of Object.entries(pot)) {
+          if (!frecv[poz]) frecv[poz] = {};
+          frecv[poz][c] = Math.round(n / maxPotPePoz[poz] * 100) / 100;
+        }
+      }
+
+      return frecv;
+    }
+
+    function ghici(strategie, pattern){
+      let ghici
+
+      if(strategie == 0){
+        ghici = get_by_entropie(listaRestransa)
+      }else{
+        const frecv = calcFrecventa(listaRestransa);
+        let max = 0;
+        let potriviri = [];
+        for (const cuv of listaRestransa) {
+          const disti = new Set();
+          let val = 0;
+          for (let i = 0; i < 5; i++) {
+            if (pattern && pattern.charAt(i) === '2') continue;
+            const l = cuv.charAt(i);
+            if (disti.has(l)) continue;
+            disti.add(l);
+            val = val + 1 * frecv[i][l];
+          }
+          if (val < max) continue;
+          else if (val > max) {
+            potriviri = [cuv];
+            max = val;
+          }
+          else if (val === max) {
+            potriviri.push(cuv);
+          }
+        }
+        ghici = potriviri[0];
+      }
+
+
+      return ghici
+
+    }
+
+
+
+    function init() {
+      let spatiu = document.getElementById("spatiu-joc")
+
+      let rand = document.createElement("div")
+      rand.className = "rand-litere"
+      
+      for (let j = 0; j < 5; j++) {
+          let casuta = document.createElement("div")
+          casuta.className = "casuta"
+          rand.appendChild(casuta)
+      }
+
+      spatiu.appendChild(rand)
+
+      window.addEventListener("keyup", (e) => {
+        let tasta = String(e.key)
+        if (tasta === "Backspace" && cuvCurent.length > 0) {
+            cuvCurent = cuvCurent.substr(0, cuvCurent.length - 1)
+            renderCuvant()
+            return
+        }
+
+        if (tasta === "Enter" && cuvCurent.length == 5) {
+          if(!listaCuvinte.includes(cuvCurent.toUpperCase())){
+            return
+          }
+          introduCuvant()
+          return
+        }
+
+        if (cuvCurent.length >= 5) {
+            return
+        }
+
+        let gasit = tasta.match(/[a-z]/gi)
+        if (!gasit || gasit.length > 1) {
+            return
+        } else {
+            cuvCurent += tasta.toUpperCase()
+            renderCuvant()
+        }
+        })
+    }
 
     function introduCuvant(cuvant = cuvCurent){
       cuvCurent = cuvant
