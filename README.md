@@ -2,6 +2,7 @@
 # :large_orange_diamond: Wordle - Proiect Arhitectura Sistemelor de Calcul
 
 Proiectul este facut in framework-ul **Django**.\
+Acesta consta intr-un joc de tip wordle si un bot care rezolva jocul folosind teoria informatiei.\
 Acesta are **interfata grafica** si poate fi jucat de o persoana sau controlul poate fi dat algoritmului care incearca sa il rezolve.\
 :bangbang: Incarcarea partii de frontend dureaza aproximativ **50 de secunde** intrucat se genereaza lista de posibilitati pentru fiecare cuvant.\
 :bangbang: Din cauza naturii limbajului javascript si a incarcarii cuvintelor care ocupa multa memorie RAM, se poate cauza un crash al paginii daca nu este destula memorie pentru tab-ul browserului.
